@@ -103,5 +103,36 @@ app.post('/messages', async (req, res) => {
   }
 });
 
+app.get('/messages', async (req, res) => {
+  const { user: from } = req.headers;
+  const { limit } = req.query;
+  const limitSchema = joi.object({
+    limit: joi.number().greater(0).optional(),
+  });
+
+  const validation = limitSchema.validate({ limit });
+  if (validation.error) {
+    const errors = validation.error.details.map((detail) => detail.message);
+    return res.status(422).send(errors);
+  }
+
+  try {
+    const messages = await db.collection('messages')
+      .find({
+        $or: [
+          { from },
+          { to: { $in: [from, 'Todos'] } },
+        ],
+      })
+      .sort({ _id: -1 })
+      .limit(!limit ? 0 : Number(limit))
+      .toArray();
+
+    return res.send(messages);
+  } catch (error) {
+    return res.status(500).send(error.message);
+  }
+});
+
 // FUNCTIONS
 app.listen(PORT_NUMBER, () => console.log(`Running server on port ${PORT_NUMBER}`));
