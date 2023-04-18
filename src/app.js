@@ -68,7 +68,6 @@ app.get('/participants', async (req, res) => {
 
 app.post('/messages', async (req, res) => {
   const { user: from } = req.headers;
-  console.log(req.headers);
   const { to, text, type } = req.body;
   const messageSchema = joi.object({
     from: joi.string().required(),
