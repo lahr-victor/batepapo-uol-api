@@ -134,5 +134,22 @@ app.get('/messages', async (req, res) => {
   }
 });
 
+app.post('/status', async (req, res) => {
+  const { user: name } = req.headers;
+  if (!name) return res.sendStatus(404);
+
+  try {
+    const participant = await db.collection('participants').findOne({ name });
+    if (!participant) return res.sendStatus(422);
+
+    const update = await db.collection('participants').updateOne({ name }, { $set: { lastStatus: Date.now() } });
+    if (update.matchedCount === 0) return res.sendStatus(404);
+
+    return res.sendStatus(200);
+  } catch (error) {
+    return res.status(500).send(error.message);
+  }
+});
+
 // FUNCTIONS
 app.listen(PORT_NUMBER, () => console.log(`Running server on port ${PORT_NUMBER}`));
