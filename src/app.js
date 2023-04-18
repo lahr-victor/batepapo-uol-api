@@ -22,6 +22,9 @@ mongoClient.connect()
 // GLOBAL CONSTANTS
 const PORT_NUMBER = 5000;
 
+// GLOBAL VARIABLES
+const refreshInterval = 15000;
+
 // ENDPOINTS
 app.post('/participants', async (req, res) => {
   const { name } = req.body;
@@ -152,4 +155,23 @@ app.post('/status', async (req, res) => {
 });
 
 // FUNCTIONS
+
+setInterval(async () => {
+  const removalThreshold = Date.now() - 10000;
+  const participants = await db.collection('participants').find({ lastStatus: { $lt: removalThreshold } }).toArray();
+
+  if (participants.length > 0) {
+    await db.collection('participants').deleteMany({ lastStatus: { $lt: removalThreshold } });
+    await db.collection('messages').insertMany(participants.map((participant) => (
+      {
+        from: participant.name,
+        to: 'Todos',
+        text: 'sai da sala...',
+        type: 'status',
+        time: dayjs().format('HH:mm:ss'),
+      }
+    )));
+  }
+}, refreshInterval);
+
 app.listen(PORT_NUMBER, () => console.log(`Running server on port ${PORT_NUMBER}`));
