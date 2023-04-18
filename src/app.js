@@ -154,7 +154,6 @@ app.post('/status', async (req, res) => {
 });
 
 // FUNCTIONS
-
 setInterval(async () => {
   const removalThreshold = Date.now() - 10000;
   const participants = await db.collection('participants').find({ lastStatus: { $lt: removalThreshold } }).toArray();
